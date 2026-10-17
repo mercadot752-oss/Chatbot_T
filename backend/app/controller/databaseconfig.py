@@ -1,24 +1,27 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+import os
 from pathlib import Path
-import sys
-# Agregar el directorio raíz del backend al PATH
-backend_path = Path(__file__).resolve().parent.parent.parent
-sys.path.append(str(backend_path))
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-import secretconfig as sc
-"""coneccion con base de datos"""
-DATABASE_URL = f"postgresql://{sc.PGUSER}:{sc.PGPASSWORD}@{sc.PGHOST}/{sc.PGDATABASE}?sslmode={sc.PGSSLMODE}&channel_binding={sc.PGCHANNELBINDING}"
+project_root = Path(__file__).resolve().parents[3]
+load_dotenv(project_root / ".env")
 
-"""motor de base de datos"""
-engine = create_engine(
-    DATABASE_URL
-)
+database_url = os.getenv("DATABASE_URL")
+if database_url:
+    connection_options = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+    engine = create_engine(database_url, connect_args=connection_options)
+else:
+    database_path = Path(__file__).resolve().parents[2] / "database" / "chatbot.db"
+    database_path.parent.mkdir(parents=True, exist_ok=True)
+    engine = create_engine(
+        URL.create("sqlite", database=str(database_path)),
+        connect_args={"check_same_thread": False},
+    )
 
-"""se crea la secion"""
 session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-"""base para los modelos"""
 base = declarative_base()
 
 def get_db():

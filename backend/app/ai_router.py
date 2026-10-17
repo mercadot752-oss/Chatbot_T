@@ -32,10 +32,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # Modelos disponibles en Groq (ordenados por velocidad/calidad)
 AVAILABLE_MODELS = [
-    "llama-3.3-70b-versatile",    # Más nuevo y potente (recomendado)
-    "llama-3.1-70b-versatile",    # Muy bueno, rápido
-    "mixtral-8x7b-32768",         # Excelente para español
-    "llama-3.1-8b-instant",       # Ultra rápido
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-20b",
 ]
 
 
@@ -482,26 +481,21 @@ async def list_models():
     return {
         "models": [
             {
-                "name": "llama-3.3-70b-versatile",
-                "description": "LLaMA 3.3 70B - Más nuevo y potente, excelente para español",
-                "context_window": 32768
-            },
-            {
-                "name": "llama-3.1-70b-versatile", 
-                "description": "LLaMA 3.1 70B - Muy bueno, equilibrio perfecto",
+                "name": "openai/gpt-oss-120b",
+                "description": "GPT OSS 120B - Modelo principal para respuestas completas",
                 "context_window": 131072
             },
             {
-                "name": "mixtral-8x7b-32768",
-                "description": "Mixtral 8x7B - Excelente para español y multilingüe",
-                "context_window": 32768
+                "name": "qwen/qwen3.8-27b",
+                "description": "Qwen 3.8 27B - Alternativa general y multilingüe",
+                "context_window": 131072
             },
             {
-                "name": "llama-3.1-8b-instant",
-                "description": "LLaMA 3.1 8B - Ultra rápido para respuestas simples",
+                "name": "openai/gpt-oss-20b",
+                "description": "GPT OSS 20B - Alternativa más ligera",
                 "context_window": 131072
             }
         ],
-        "count": 4,
+        "count": 3,
         "provider": "Groq"
     }
