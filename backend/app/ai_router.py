@@ -69,19 +69,42 @@ def _cargar_contexto_json():
         return None
 
 
+def _buscar_perfil_por_identificacion(db: Session, identificacion: str = None):
+    """Busca una identificación numérica en los perfiles institucionales."""
+    if not identificacion:
+        return None, None
+
+    try:
+        numero = int(str(identificacion).strip())
+    except (TypeError, ValueError):
+        return None, None
+
+    estudiante = db.query(models.Estudiante).filter(
+        models.Estudiante.id == numero
+    ).first()
+    if estudiante:
+        return "estudiante", estudiante
+
+    usuario = db.query(models.Usuario).filter(
+        models.Usuario.id == numero
+    ).first()
+    if usuario:
+        return "usuario", usuario
+
+    return None, None
+
+
 def _obtener_contexto_bd(db: Session, identificacion: str = None):
-    """Obtiene información completa y real de la base de datos para el contexto de la IA."""
+    """Incluye datos personales solo del perfil previamente validado."""
     contexto = []
     
     try:
         # ============ INFORMACIÓN DEL USUARIO ============
         if identificacion:
-            # Buscar primero como estudiante (el id es la identificación)
-            estudiante = db.query(models.Estudiante).filter(
-                models.Estudiante.id == identificacion
-            ).first()
-            
-            if estudiante:
+            tipo_perfil, perfil = _buscar_perfil_por_identificacion(db, identificacion)
+
+            if tipo_perfil == "estudiante":
+                estudiante = perfil
                 contexto.append("=" * 50)
                 contexto.append("INFORMACIÓN DEL ESTUDIANTE")
                 contexto.append("=" * 50)
@@ -119,21 +142,16 @@ def _obtener_contexto_bd(db: Session, identificacion: str = None):
                         
                 contexto.append("")
             
-            # Si no es estudiante, buscar como usuario general
-            if not estudiante:
-                usuario = db.query(models.Usuario).filter(
-                    models.Usuario.id == identificacion
-                ).first()
-                
-                if usuario:
-                    contexto.append("=" * 50)
-                    contexto.append(f"INFORMACIÓN DEL {usuario.rol.upper()}")
-                    contexto.append("=" * 50)
-                    contexto.append(f"Nombre completo: {usuario.nombre} {usuario.apellidos}")
-                    contexto.append(f"Identificación: {usuario.id}")
-                    contexto.append(f"Rol: {usuario.rol}")
-                    contexto.append(f"Tipo de documento: {usuario.tipo_id}")
-                    contexto.append("")
+            elif tipo_perfil == "usuario":
+                usuario = perfil
+                contexto.append("=" * 50)
+                contexto.append(f"INFORMACIÓN DEL {usuario.rol.upper()}")
+                contexto.append("=" * 50)
+                contexto.append(f"Nombre completo: {usuario.nombre} {usuario.apellidos}")
+                contexto.append(f"Identificación: {usuario.id}")
+                contexto.append(f"Rol: {usuario.rol}")
+                contexto.append(f"Tipo de documento: {usuario.tipo_id}")
+                contexto.append("")
         
         # ============ TODAS LAS MATERIAS DISPONIBLES ============
         todas_materias = db.query(models.Materia).limit(20).all()
@@ -145,18 +163,6 @@ def _obtener_contexto_bd(db: Session, identificacion: str = None):
                 contexto.append(f"  • {mat.nombre_materia} - {mat.creditos} créditos")
             contexto.append("")
         
-        # ============ USUARIOS DEL SISTEMA ============
-        usuarios = db.query(models.Usuario).limit(10).all()
-        if usuarios:
-            contexto.append("=" * 50)
-            contexto.append("USUARIOS DEL SISTEMA:")
-            contexto.append("=" * 50)
-            for user in usuarios:
-                contexto.append(f"� {user.nombre} {user.apellidos}")
-                contexto.append(f"   Rol: {user.rol}")
-                contexto.append(f"   Tipo ID: {user.tipo_id}")
-                contexto.append("")
-                
     except Exception as e:
         logger.warning(f"Error obteniendo contexto de BD: {e}")
     
@@ -181,16 +187,16 @@ def _construir_prompt_con_contexto(prompt_usuario: str, contexto_json: dict = No
         "- Ser amigable, profesional y usar un tono conversacional",
         "",
         "CAPACIDADES:",
-        "✓ Acceso COMPLETO a la base de datos de la universidad",
-        "✓ Información en TIEMPO REAL de estudiantes, profesores, materias, noticias",
-        "✓ Puedes llamar al usuario por su NOMBRE si está identificado",
+        "✓ Usa la información general y los datos de BD que aparecen en este contexto",
+        "✓ Los datos personales solo se incluyen cuando el backend valida la identificación",
+        "✓ Si no recibes un perfil personal en el contexto, no inventes ni supongas datos del usuario",
         "✓ Puedes hacer cálculos (promedios, créditos, etc.)",
         "✓ Puedes ayudar a los usuarios a enviar SUGERENCIAS al buzón",
         "",
         "REGLAS IMPORTANTES:",
-        "1. Si el usuario está identificado, dirígete a él por su NOMBRE",
-        "2. Si preguntan por materias/notas, usa la información REAL de la BD",
-        "3. Si preguntan por profesores, usa los datos REALES",
+        "1. Dirígete al usuario por su nombre solo si el contexto incluye un perfil validado",
+        "2. Para información académica personal, usa exclusivamente los datos del perfil validado en el contexto",
+        "3. Si el contexto no contiene la información solicitada, dilo con claridad y no la inventes",
         "4. 📊 MATERIAS PRIORIZADAS: Cuando te pregunten por materias priorizadas o por orden de créditos:",
         "   - USA EXCLUSIVAMENTE la sección '📊 MATERIAS PRIORIZADAS POR CRÉDITOS'",
         "   - Muestra el listado COMPLETO tal como aparece en el contexto",
@@ -276,33 +282,24 @@ def _construir_prompt_con_contexto(prompt_usuario: str, contexto_json: dict = No
 async def verificar_identificacion(identificacion: str, db: Session = Depends(get_db)):
     """Verifica la identificación y retorna el nombre del usuario."""
     try:
-        # Buscar como estudiante
-        estudiante = db.query(models.Estudiante).filter(
-            models.Estudiante.id == identificacion
-        ).first()
-        
-        if estudiante:
+        tipo_perfil, perfil = _buscar_perfil_por_identificacion(db, identificacion)
+
+        if tipo_perfil == "estudiante":
             return {
                 "encontrado": True,
                 "tipo": "estudiante",
-                "nombre": f"{estudiante.nombre} {estudiante.apellidos}",
+                "nombre": f"{perfil.nombre} {perfil.apellidos}",
                 "identificacion": identificacion
             }
-        
-        # Buscar como usuario general
-        usuario = db.query(models.Usuario).filter(
-            models.Usuario.id == identificacion
-        ).first()
-        
-        if usuario:
+
+        if tipo_perfil == "usuario":
             return {
                 "encontrado": True,
-                "tipo": usuario.rol,
-                "nombre": f"{usuario.nombre} {usuario.apellidos}",
+                "tipo": perfil.rol,
+                "nombre": f"{perfil.nombre} {perfil.apellidos}",
                 "identificacion": identificacion
             }
-        
-        # No encontrado
+
         return {
             "encontrado": False,
             "mensaje": "Identificación no encontrada en el sistema"
@@ -337,13 +334,19 @@ async def generate_ai(
     if not request.prompt or not request.prompt.strip():
         raise HTTPException(status_code=400, detail="El prompt no puede estar vacío")
 
+    tipo_perfil, _ = _buscar_perfil_por_identificacion(db, request.identificacion)
+    identificacion_validada = tipo_perfil is not None
+    if request.identificacion and not identificacion_validada:
+        logger.info("Identificación no encontrada; se responderá sin contexto personal")
+
     client = _get_groq_client()
     
     # Construir prompt con contexto si está habilitado
     prompt_final = request.prompt
     if request.usar_contexto:
         contexto_json = _cargar_contexto_json()
-        contexto_bd = _obtener_contexto_bd(db, request.identificacion) if request.identificacion else None
+        identificacion_contexto = request.identificacion if identificacion_validada else None
+        contexto_bd = _obtener_contexto_bd(db, identificacion_contexto)
         prompt_final = _construir_prompt_con_contexto(request.prompt, contexto_json, contexto_bd)
         logger.info(f"Prompt con contexto construido (longitud: {len(prompt_final)} caracteres)")
     
@@ -367,6 +370,24 @@ async def generate_ai(
             
             # Extraer respuesta
             text = response.choices[0].message.content
+
+            # Guardar cada intercambio del chat activo en la base PostgreSQL única.
+            try:
+                crud.crear_historial_chat(
+                    db,
+                    schemas.ChatHistorialCreate(
+                        numero_documento=request.identificacion if identificacion_validada else None,
+                        mensaje=request.prompt,
+                        respuesta=text,
+                        estado="IA",
+                    ),
+                )
+            except Exception as e:
+                logger.exception("No se pudo guardar el historial del chat")
+                raise HTTPException(
+                    status_code=500,
+                    detail="La respuesta se generó, pero no se pudo guardar el historial.",
+                ) from e
             
             return {
                 "text": text,
@@ -375,7 +396,8 @@ async def generate_ai(
                 "completion_tokens": response.usage.completion_tokens,
                 "total_tokens": response.usage.total_tokens,
                 "finish_reason": response.choices[0].finish_reason,
-                "contexto_usado": request.usar_contexto
+                "contexto_usado": request.usar_contexto,
+                "identificacion_validada": identificacion_validada if request.identificacion else None
             }
                 
         except Exception as e:

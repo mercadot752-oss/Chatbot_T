@@ -1,14 +1,10 @@
 from sqlalchemy.orm import Session
-from controller import models
-import schemas
+from . import models, schemas
 from typing import List, Optional
 from pathlib import Path
 from sqlalchemy import text
-from controller.base_datos import BaseDatos
+from .base_datos import BaseDatos
 import sys
-
-from controller import models
-from controller import schemas
 """sys.path.append(str(Path(__file__).resolve().parent))
 
 #import models

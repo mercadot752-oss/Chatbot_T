@@ -1,18 +1,12 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.sql import func
-import sys
-from pathlib import Path
-
-backend_path = Path(__file__).resolve().parent
-sys.path.append(str(backend_path))
-from databaseconfig import base as Base
+from .databaseconfig import Base
 
 class EstudianteMateria(Base):
     __tablename__ = "estudiante_materias"
     
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    id_estudiante = Column(String(10), ForeignKey("estudiante.id"), nullable=False)
+    id_estudiante = Column(Integer, ForeignKey("estudiante.id"), nullable=False)
     id_materia = Column(Integer, ForeignKey("materias.id_materia"))
 
 class Materia(Base):

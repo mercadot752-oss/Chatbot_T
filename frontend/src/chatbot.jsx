@@ -1,19 +1,16 @@
 import { useState } from "react";
 import "./chatbot.css";
 import logoUdem from "../public/logo_udemedellin2.png";
+import { Link } from "react-router-dom";
 
 function Chatbot() {
   const [messages, setMessages] = useState([
     {
-      text: "🎓 Bienvenido al Asistente Virtual Inteligente de la Universidad de Medellín",
+      text: "🎓 ¡Hola! Soy PromeIA, el asistente virtual de la Universidad de Medellín.",
       type: "bot",
     },
     {
-      text: "Soy tu asistente con IA y puedo ayudarte con información sobre materias, profesores, notas, eventos y más.",
-      type: "bot",
-    },
-    {
-      text: "Para brindarte información personalizada, por favor ingresa tu número de identificación:",
+      text: "Puedo orientarte sobre materias, profesores, eventos y servicios universitarios. Para preguntas generales puedes empezar sin identificarte.",
       type: "bot",
     },
   ]);
@@ -35,7 +32,7 @@ function Chatbot() {
   const verificarIdentificacion = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/ai/verificar_identificacion/${id}`
+        `/api/ai/verificar_identificacion/${encodeURIComponent(id)}`
       );
       const data = await response.json();
       return data;
@@ -48,7 +45,7 @@ function Chatbot() {
   const consultarIA = async (pregunta) => {
     setCargandoIA(true);
     try {
-      const response = await fetch("http://localhost:8000/ai/generate", {
+      const response = await fetch("/api/ai/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,6 +73,13 @@ function Chatbot() {
         return;
       }
 
+      if (data.identificacion_validada === false) {
+        mostrarMensaje(
+          "⚠️ No pude validar esa identificación. Responderé sin usar información académica personal; puedes continuar con preguntas generales.",
+          "bot"
+        );
+      }
+
       if (data.text) {
         mostrarMensaje(`🤖 ${data.text}`, "bot");
       } else if (data.detail) {
@@ -97,15 +101,18 @@ function Chatbot() {
 
     // Si está esperando identificación
     if (esperandoIdentificacion) {
-      const id = inputValue.trim();
-      if (id === "") {
-        // Usuario no quiere dar identificación
+      const entrada = inputValue.trim();
+      const quiereOmitirId = /^(omitir|continuar|sin identificaci[oó]n)$/i.test(entrada);
+      const pareceIdentificacion = /^\d{5,15}$/.test(entrada);
+
+      if (quiereOmitirId) {
         mostrarMensaje(
-          "✅ Perfecto, continuemos sin identificación. ¿En qué puedo ayudarte?",
+          "✅ Continuemos sin identificación. ¿En qué puedo ayudarte?",
           "bot"
         );
         setEsperandoIdentificacion(false);
-      } else {
+      } else if (pareceIdentificacion) {
+        const id = entrada;
         // Verificar identificación en la base de datos
         mostrarMensaje("🔍 Verificando identificación...", "bot");
         const resultado = await verificarIdentificacion(id);
@@ -125,6 +132,10 @@ function Chatbot() {
           );
         }
         setEsperandoIdentificacion(false);
+      } else {
+        // Una entrada que no parece un documento se trata como la primera pregunta.
+        setEsperandoIdentificacion(false);
+        consultarIA(entrada);
       }
       setInputValue("");
       return;
@@ -136,77 +147,97 @@ function Chatbot() {
   };
 
   return (
-    <div>
-      <div className="chat-header">
-        <button className="atras1">
-          <a href="/">↶</a>
-        </button>
-        <img src={logoUdem} alt="logo udem" height="70" />
-        {nombreUsuario && (
-          <div
-            style={{
-              position: "absolute",
-              right: "20px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "#4CAF50",
-              color: "white",
-              padding: "8px 15px",
-              borderRadius: "20px",
-              fontSize: "14px",
-              fontWeight: "bold",
-            }}
-          >
-            👤 {nombreUsuario}
-          </div>
-        )}
-      </div>
+    <div className="chatbot-page">
+      <header className="chat-header">
+        <Link className="chat-back-link" to="/" aria-label="Volver al inicio">
+          <span className="chat-back-arrow" aria-hidden="true">←</span>
+          <span>Volver</span>
+        </Link>
 
-      <div className="chat-container">
-        <div className="chat-box">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`${msg.type}-message`}
-              dangerouslySetInnerHTML={{ __html: msg.text }}
-            />
-          ))}
+        <div className="chat-identity">
+          <img src={logoUdem} alt="Universidad de Medellín" />
+          <div className="chat-identity-copy">
+            <strong>PromeIA</strong>
+            <span>Universidad de Medellín</span>
+          </div>
         </div>
 
-        <div className="input-container">
-          <center>
+        <div className="chat-header-right">
+          <div className="chat-presence" aria-label="Asistente disponible">
+            <span className="chat-presence-dot" aria-hidden="true" />
+            <span>Disponible</span>
+          </div>
+          {nombreUsuario && <div className="user-badge">👤 {nombreUsuario}</div>}
+        </div>
+      </header>
+
+      <main className="chat-main">
+        <div className="chat-intro">
+          <p className="eyebrow">Asistente virtual</p>
+          <h1>¿En qué puedo ayudarte?</h1>
+          <p>Escribe tu pregunta con tus propias palabras. Estoy aquí para orientarte.</p>
+        </div>
+
+        <section className="chat-panel" aria-label="Conversación con PromeIA">
+          <div className="chat-box" role="log" aria-live="polite" aria-relevant="additions">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`${msg.type}-message`}
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+              />
+            ))}
             {cargandoIA && (
-              <div style={{ marginBottom: "10px", color: "#4CAF50" }}>
-                🤖 Pensando... ⏳
+              <div className="chat-thinking" role="status">
+                <span>PromeIA está preparando una respuesta</span>
+                <span className="thinking-dots" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
               </div>
             )}
+          </div>
+
+          <div className="input-container">
             <form onSubmit={handleSubmit}>
               <input
-                className="barra"
+                className="message-input"
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder={
                   esperandoIdentificacion
-                    ? "Número de identificación (o Enter para omitir)"
+                    ? "Escribe una pregunta o tu identificación (opcional)"
                     : "Escribe tu pregunta..."
                 }
+                aria-label="Escribe tu mensaje para PromeIA"
                 disabled={cargandoIA}
               />
-              <button className="flechita" type="submit" disabled={cargandoIA}>
-                ➤
+              <button
+                className="send-button"
+                type="submit"
+                aria-label="Enviar mensaje"
+                disabled={cargandoIA}
+              >
+                <span aria-hidden="true">➤</span>
               </button>
               <button
-                className="flechita"
+                className="reset-button"
                 onClick={() => window.location.reload()}
                 type="button"
+                aria-label="Iniciar una nueva conversación"
+                title="Nueva conversación"
               >
-                🔄
+                <span aria-hidden="true">↻</span>
               </button>
             </form>
-          </center>
-        </div>
-      </div>
+            <p className="input-hint">
+              La identificación es opcional para consultas generales. No compartas contraseñas ni datos sensibles.
+            </p>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
