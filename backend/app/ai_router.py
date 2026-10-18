@@ -139,6 +139,30 @@ def _obtener_contexto_bd(db: Session, identificacion: str = None):
                                 posicion += 1
                     except Exception as e:
                         logger.warning(f"Error al obtener materias priorizadas: {e}")
+
+                # Las calificaciones son información personal; se consultan solo
+                # después de validar que la identificación corresponde a un estudiante.
+                calificaciones = db.query(models.Calificacion, models.Materia).join(
+                    models.Materia,
+                    models.Calificacion.id_materia == models.Materia.id_materia,
+                ).filter(
+                    models.Calificacion.id_estudiante == estudiante.id
+                ).order_by(
+                    models.Calificacion.periodo,
+                    models.Materia.nombre_materia,
+                ).all()
+
+                if calificaciones:
+                    contexto.append(f"\nCALIFICACIONES REGISTRADAS ({len(calificaciones)}):")
+                    notas = []
+                    for calificacion, materia in calificaciones:
+                        nota = float(calificacion.nota)
+                        notas.append(nota)
+                        contexto.append(
+                            f"  • {materia.nombre_materia} ({calificacion.periodo}): {nota:.2f}"
+                        )
+                    promedio = sum(notas) / len(notas)
+                    contexto.append(f"Promedio de las calificaciones registradas: {promedio:.2f}")
                         
                 contexto.append("")
             

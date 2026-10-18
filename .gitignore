@@ -31,3 +31,7 @@ dist-ssr
 DOCUMENTACION_IA*
 SUGERENCIAS_IA.md
 *test*
+!backend/app/tests/
+!backend/app/tests/test_identification.py
+!frontend/tests/
+!frontend/tests/chatbot.spec.js

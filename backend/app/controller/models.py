@@ -1,4 +1,14 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.sql import func
 from .databaseconfig import Base
 
@@ -8,6 +18,24 @@ class EstudianteMateria(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     id_estudiante = Column(Integer, ForeignKey("estudiante.id"), nullable=False)
     id_materia = Column(Integer, ForeignKey("materias.id_materia"))
+
+
+class Calificacion(Base):
+    """Calificaciones académicas de demostración asociadas a un estudiante y materia."""
+    __tablename__ = "calificaciones"
+    __table_args__ = (
+        CheckConstraint("nota >= 0 AND nota <= 5", name="ck_calificaciones_nota_0_5"),
+        UniqueConstraint(
+            "id_estudiante", "id_materia", "periodo",
+            name="uq_calificacion_estudiante_materia_periodo",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_estudiante = Column(Integer, ForeignKey("estudiante.id"), nullable=False, index=True)
+    id_materia = Column(Integer, ForeignKey("materias.id_materia"), nullable=False, index=True)
+    periodo = Column(String(20), nullable=False)
+    nota = Column(Numeric(3, 2), nullable=False)
 
 class Materia(Base):
     __tablename__ = "materias"
