@@ -188,4 +188,4 @@ docker compose push frontend backend
 
 - Juan José Cano Giraldo
 - Tomás Mercado Ramos
-- Christofer
+- Christofer sanchez 
