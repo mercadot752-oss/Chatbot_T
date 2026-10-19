@@ -35,7 +35,7 @@ Este documento registra historias iniciales a partir de las funciones que ya exi
 ## HU-04 — Registrar una sugerencia institucional
 
 - **Historia:** Como integrante de la comunidad universitaria, quiero enviar una queja, reclamo, sugerencia o felicitación para dejar constancia de mi opinión.
-- **Estado:** El endpoint `POST /ai/sugerencia` está implementado; falta verificar y documentar un flujo de uso desde la interfaz.
+- **Estado:** Verificada manualmente desde Swagger mediante `POST /ai/sugerencia`; se confirmó la respuesta exitosa y la persistencia en PostgreSQL con estado `Pendiente`.
 - **Criterios de aceptación:**
   - El servicio acepta los tipos de sugerencia permitidos y rechaza tipos no válidos.
   - Para registrar la sugerencia se valida que la identificación corresponda a un perfil existente.
@@ -51,6 +51,6 @@ Asignación de responsables del equipo para la entrega. HU-04 queda como trabajo
 | HU-01 | Juan José Cano Giraldo | Consultas generales del chatbot |
 | HU-02 | Tomás Mercado Ramos | Verificación de identificación y contexto personalizado |
 | HU-03 | Christofer | Persistencia del historial en PostgreSQL |
-| HU-04 | Juan José Cano Giraldo, Tomás Mercado Ramos y Christofer | Registro de sugerencias institucionales |
+| HU-04 | Juan José Cano Giraldo, Tomás Mercado Ramos y Christofer | Prueba en Swagger con perfil sintético `999000001`; respuesta exitosa y registro confirmado en `buzon_de_sugerencias` (estado `Pendiente`). |
 
 Integrantes del equipo: Juan José Cano Giraldo, Tomás Mercado Ramos y Christofer.
