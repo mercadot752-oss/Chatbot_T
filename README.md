@@ -59,6 +59,7 @@ Abre PowerShell en la carpeta raíz del proyecto, donde está `docker-compose.ym
 Cuando frontend y backend estén activos, abre:
 
 - Aplicación: <http://localhost:5173>
+- Bienvenida del backend: <http://localhost:8000/> (debe responder con “Hola mundo”).
 - Documentación interactiva de FastAPI (Swagger): <http://localhost:8000/docs>
 
 El frontend envía las solicitudes del chatbot al backend a través del proxy de Nginx. Docker Compose configura `DATABASE_URL` para que el backend use el PostgreSQL del servicio `db`.
@@ -185,6 +186,6 @@ docker compose push frontend backend
 
 ## Integrantes
 
-juan José cano giraldo
-tomas mercado ramos
-Christofer  
+- Juan José Cano Giraldo
+- Tomás Mercado Ramos
+- Christofer

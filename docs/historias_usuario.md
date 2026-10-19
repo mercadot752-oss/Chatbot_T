@@ -10,7 +10,7 @@ Este documento registra historias iniciales a partir de las funciones que ya exi
   - El usuario puede omitir la identificación y escribir una pregunta.
   - La pregunta se envía al backend y la respuesta aparece en el chat.
   - Una consulta general no debe incluir datos personales de perfiles institucionales.
-- **Responsable:** Pendiente de asignación.
+- **Responsable:** Juan José Cano Giraldo.
 
 ## HU-02 — Consultar información personalizada
 
@@ -20,7 +20,7 @@ Este documento registra historias iniciales a partir de las funciones que ya exi
   - Una identificación existente puede habilitar contexto del perfil correspondiente.
   - Una identificación no encontrada permite continuar con consultas generales.
   - Una identificación no validada no debe cargar datos académicos personales ni asociar el historial a ese perfil.
-- **Responsable:** Pendiente de asignación.
+- **Responsable:** Tomás Mercado Ramos.
 
 ## HU-03 — Guardar el historial del chat
 
@@ -30,7 +30,7 @@ Este documento registra historias iniciales a partir de las funciones que ya exi
   - Cada respuesta generada se guarda junto con la pregunta y el estado correspondiente.
   - El backend usa la base PostgreSQL configurada para el proyecto.
   - Si falla el guardado, el backend comunica el error en lugar de reportar el intercambio como guardado.
-- **Responsable:** Pendiente de asignación.
+- **Responsable:** Christofer.
 
 ## HU-04 — Registrar una sugerencia institucional
 
@@ -40,17 +40,17 @@ Este documento registra historias iniciales a partir de las funciones que ya exi
   - El servicio acepta los tipos de sugerencia permitidos y rechaza tipos no válidos.
   - Para registrar la sugerencia se valida que la identificación corresponda a un perfil existente.
   - La sugerencia queda guardada con estado inicial `Pendiente`.
-- **Responsable:** Pendiente de asignación.
+- **Responsables:** Juan José Cano Giraldo, Tomás Mercado Ramos y Christofer.
 
 ## Asignación del equipo
 
-Completar esta tabla en reunión de equipo. Una persona puede asumir varias historias, pero cada historia debe tener al menos un responsable identificado.
+Asignación de responsables del equipo para la entrega. HU-04 queda como trabajo compartido.
 
 | Historia | Responsable(s) | Evidencia de trabajo/entrega |
 | --- | --- | --- |
-| HU-01 | Pendiente | Pendiente |
-| HU-02 | Pendiente | Pendiente |
-| HU-03 | Pendiente | Pendiente |
-| HU-04 | Pendiente | Pendiente |
+| HU-01 | Juan José Cano Giraldo | Consultas generales del chatbot |
+| HU-02 | Tomás Mercado Ramos | Verificación de identificación y contexto personalizado |
+| HU-03 | Christofer | Persistencia del historial en PostgreSQL |
+| HU-04 | Juan José Cano Giraldo, Tomás Mercado Ramos y Christofer | Registro de sugerencias institucionales |
 
-Integrantes registrados en el README: Kevin Mateo Gómez Díez, Jhon Freddy Asprilla, Tomás Mercado Ramos y Mario Andrade.
+Integrantes del equipo: Juan José Cano Giraldo, Tomás Mercado Ramos y Christofer.
