@@ -157,6 +157,9 @@ Las imágenes del proyecto se publican bajo la cuenta `juan778`:
 docker pull juan778/chatbot-frontend:latest
 docker pull juan778/chatbot-backend:latest
 ```
+link imagenes
+https://hub.docker.com/repository/docker/juan778/chatbot-backend/general
+https://hub.docker.com/repository/docker/juan778/chatbot-frontend/general
 
 El archivo Compose incluye estos nombres y puede construir las imágenes localmente desde los Dockerfiles. Para publicarlas después de iniciar sesión en DockerHub:
 
@@ -182,7 +185,6 @@ docker compose push frontend backend
 
 ## Integrantes
 
-- Kevin Mateo Gómez Díez
-- Jhon Freddy Asprilla
-- Tomás Mercado Ramos
-- Mario Andrade
+juan José cano giraldo
+tomas mercado ramos
+Christofer  
