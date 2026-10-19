@@ -1,0 +1,8 @@
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/juanjosek301-dot/chatbot-frontend.git
+	branch = main
+[submodule "backend"]
+	path = backend
+	url = https://github.com/juanjosek301-dot/chatbot-backend.git
+	branch = main

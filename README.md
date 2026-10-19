@@ -17,6 +17,21 @@ Las versiones de los paquetes del backend están fijadas en `backend/requirement
 - Docker Desktop con Docker Compose habilitado.
 - Una clave de API de Groq para generar respuestas con IA.
 
+## Descargar el proyecto
+
+El repositorio principal contiene frontend y backend como submódulos. Clónalo incluyendo ambos proyectos:
+
+```powershell
+git clone --recurse-submodules https://github.com/mercadot752-oss/Chatbot_T.git
+cd Chatbot_T
+```
+
+Si ya clonaste el repositorio principal sin los submódulos, inicialízalos desde su carpeta:
+
+```powershell
+git submodule update --init --recursive
+```
+
 ## Configuración y ejecución en Windows
 
 Abre PowerShell en la carpeta raíz del proyecto, donde está `docker-compose.yml`.
@@ -128,7 +143,6 @@ Después, desde `frontend/`, instala dependencias, instala el navegador de Playw
 
 ```powershell
 npm install
-npm install -D @playwright/test
 npx playwright install chromium
 npm run test:e2e
 ```
@@ -137,14 +151,19 @@ Los perfiles usados por las pruebas tienen identificaciones ficticias `999000001
 
 ## Imágenes DockerHub
 
-Las imágenes de frontend y backend aún deben publicarse bajo el usuario u organización DockerHub del equipo. Cuando se definan esos nombres y se publiquen, esta sección debe reemplazar los marcadores por los nombres reales. El formato de descarga será:
+Las imágenes del proyecto se publican bajo la cuenta `juan778`:
 
 ```powershell
-docker pull <usuario-dockerhub>/chatbot-frontend:<etiqueta>
-docker pull <usuario-dockerhub>/chatbot-backend:<etiqueta>
+docker pull juan778/chatbot-frontend:latest
+docker pull juan778/chatbot-backend:latest
 ```
 
-Actualmente el arranque documentado arriba construye ambas imágenes localmente desde sus Dockerfiles mediante Docker Compose.
+El archivo Compose incluye estos nombres y puede construir las imágenes localmente desde los Dockerfiles. Para publicarlas después de iniciar sesión en DockerHub:
+
+```powershell
+docker compose build frontend backend
+docker compose push frontend backend
+```
 
 ## Estructura del proyecto
 

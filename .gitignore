@@ -35,3 +35,4 @@ SUGERENCIAS_IA.md
 !backend/app/tests/test_identification.py
 !frontend/tests/
 !frontend/tests/chatbot.spec.js
+.repo-migration/
