@@ -150,6 +150,58 @@ npm run test:e2e
 
 Los perfiles usados por las pruebas tienen identificaciones ficticias `999000001` a `999000006` y no representan personas reales.
 
+## CI y despliegue en Minikube
+
+El workflow de GitHub Actions en `.github/workflows/ci.yml` ejecuta las pruebas unitarias del backend, lint y build del frontend, y las pruebas E2E contra la aplicación iniciada con Docker Compose. Las pruebas E2E cargan perfiles sintéticos y no requieren una clave de Groq. Cada ejecución queda asociada al commit o pull request.
+
+Después de iniciar sesión en DockerHub, publica las imágenes del código que vas a demostrar:
+
+```powershell
+docker compose build frontend backend
+docker compose push frontend backend
+```
+
+Para desplegar en Minikube desde PowerShell, crea los secretos localmente; no guardes claves ni contraseñas en los manifiestos:
+
+```powershell
+minikube start --driver=docker
+$databaseSecure = Read-Host "POSTGRES_PASSWORD (usa el mismo valor en redeploys)" -AsSecureString
+$databasePassword = [Net.NetworkCredential]::new("", $databaseSecure).Password
+$databaseUrlPassword = [uri]::EscapeDataString($databasePassword)
+$groqSecure = Read-Host "GROQ_API_KEY" -AsSecureString
+$groqKey = [Net.NetworkCredential]::new("", $groqSecure).Password
+$databaseUrl = "postgresql+psycopg2://chatbot:${databaseUrlPassword}@database-service:5432/chatbot"
+kubectl create secret generic chatbot-secrets `
+   --from-literal="postgres-password=$databasePassword" `
+   --from-literal="database-url=$databaseUrl" `
+   --from-literal="groq-api-key=$groqKey" `
+   --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f k8s/database.yaml -f k8s/backend.yaml -f k8s/frontend.yaml
+kubectl rollout status deployment/database --timeout=180s
+kubectl rollout status deployment/backend-api --timeout=180s
+kubectl rollout status deployment/frontend-web --timeout=180s
+kubectl get deployments,pods,services,pvc
+```
+
+Carga los perfiles sintéticos y expón temporalmente el frontend para la demostración:
+
+```powershell
+Get-Content .\backend\database\seed_demo.sql -Raw | kubectl exec -i deployment/database -- psql -v ON_ERROR_STOP=1 -U chatbot -d chatbot
+kubectl port-forward service/frontend-service 8080:80
+```
+
+Con el `port-forward` activo, abre <http://127.0.0.1:8080>. En otra terminal, las mismas pruebas E2E se pueden dirigir al servicio de Minikube:
+
+```powershell
+Set-Location .\frontend
+npm ci
+npx playwright install chromium
+$env:PLAYWRIGHT_BASE_URL = "http://127.0.0.1:8080"
+npm run test:e2e
+```
+
+Para mostrar operación y trazabilidad en vivo, usa `kubectl get pods,services,pvc`, `kubectl describe deployment backend-api` y `kubectl logs deployment/backend-api`. Los despliegues consumen los tags `latest` publicados en DockerHub; publícalos después de construir las imágenes si el código cambió.
+
 ## Imágenes DockerHub
 
 Las imágenes del proyecto se publican bajo la cuenta `juan778`:

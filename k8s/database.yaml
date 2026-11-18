@@ -25,19 +25,32 @@ spec:
     spec:
       containers:
         - name: database
-          image: postgres:15-alpine
+          image: postgres:16-alpine
           ports:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: "chatbot_db"
+              value: "chatbot"
             - name: POSTGRES_USER
-              value: "postgres"
+              value: "chatbot"
             - name: POSTGRES_PASSWORD
-              value: "segura123"
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-secrets
+                  key: postgres-password
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: db-storage
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U chatbot -d chatbot"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U chatbot -d chatbot"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
       volumes:
         - name: db-storage
           persistentVolumeClaim:
